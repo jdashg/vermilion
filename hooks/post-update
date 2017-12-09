@@ -1,0 +1,22 @@
+#!/bin/env python3
+
+import os
+import subprocess
+import sys
+
+subenv = dict(os.environ)
+subenv['PATH'] += ':/usr/share/git-cinnabar'
+
+def run_git(*x):
+    sys.stdout.flush()
+    return subprocess.run(['git'] + list(x), env=subenv)
+
+
+print(str(sys.argv))
+refname = sys.argv[1]
+
+(_refs,_heads,remote) = refname.split('/')
+assert _refs == 'refs'
+assert _heads == 'heads'
+run_git('branch', '-D', remote)
+

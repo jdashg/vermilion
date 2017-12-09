@@ -1,0 +1,50 @@
+#!/bin/env python3
+import os
+import subprocess
+import sys
+
+
+subenv = dict(os.environ)
+#print(subenv['PATH'])
+subenv['PATH'] += ':/usr/share/git-cinnabar'
+
+def run_git(*x):
+    sys.stdout.flush()
+    return subprocess.run(['git'] + list(x), env=subenv)
+
+
+print(str(sys.argv))
+(refname, oldhash, newhash) = sys.argv[1:4]
+
+(_refs,_heads,remote) = refname.split('/')
+assert _refs == 'refs'
+assert _heads == 'heads'
+
+if remote == 'try':
+    p = run_git('push', 'try', newhash+':refs/remotes/try/unnamed')
+    exit(p.returncode)
+
+
+REMOTES = set([
+        'central',
+        'inbound',
+        'beta',
+        'release',
+        'esr52',
+])
+if remote not in BRANCHES:
+    print('Unrecognized remote: ' + remote)
+    exit(1)
+
+print('Fetching from hg...')
+p = run_git('fetch', remote, 'branches/default/tip')
+assert p.returncode == 0
+dest = 'refs/remotes/'+remote+'/branches/default/tip'
+p = run_git('merge-base', '--is-ancestor', dest, newhash) 
+if p.returncode != 0:
+    print('Divergent head: Rebase.')
+    exit(1)
+
+p = run_git('push', '--dry-run', remote, newhash+':'+dest)
+exit(p.returncode)
+
