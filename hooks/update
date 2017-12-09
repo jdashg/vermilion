@@ -4,47 +4,45 @@ import subprocess
 import sys
 
 
-subenv = dict(os.environ)
-#print(subenv['PATH'])
-subenv['PATH'] += ':/usr/share/git-cinnabar'
+GIT_ENV = dict(os.environ)
 
-def run_git(*x):
+def run_git(*x, **kw):
     sys.stdout.flush()
-    return subprocess.run(['git'] + list(x), env=subenv)
+    return subprocess.run(['git'] + list(x), env=GIT_ENV, check=True, **kw)
+
+def run_git_lines(*x):
+    p = run_git(*x, stdout=subprocess.PIPE)
+    return p.stdout.decode().splitlines()
+
+try:
+    cinnabar_path = run_git_lines('config', 'cinnabar.path')[0]
+    GIT_ENV['PATH'] += ':' + cinnabar_path
+except subprocess.CalledProcessError:
+    pass
+
+REMOTES = run_git_lines('remote')
 
 
 print(str(sys.argv))
-(refname, oldhash, newhash) = sys.argv[1:4]
+(ref_name, old_hash, new_hash) = sys.argv[1:4]
 
-(_refs,_heads,remote) = refname.split('/')
+(_refs,_heads,remote) = ref_name.split('/')
 assert _refs == 'refs'
 assert _heads == 'heads'
 
-if remote == 'try':
-    p = run_git('push', 'try', newhash+':refs/remotes/try/unnamed')
-    exit(p.returncode)
-
-
-REMOTES = set([
-        'central',
-        'inbound',
-        'beta',
-        'release',
-        'esr52',
-])
-if remote not in BRANCHES:
+if remote not in REMOTES:
     print('Unrecognized remote: ' + remote)
     exit(1)
 
 print('Fetching from hg...')
-p = run_git('fetch', remote, 'branches/default/tip')
-assert p.returncode == 0
-dest = 'refs/remotes/'+remote+'/branches/default/tip'
-p = run_git('merge-base', '--is-ancestor', dest, newhash) 
-if p.returncode != 0:
-    print('Divergent head: Rebase.')
-    exit(1)
+try:
+    run_git('fetch', remote, 'branches/default/tip')
+except subprocess.CalledProcessError:
+    print('Did you forget to set cinnabar.path?')
+    raise
 
-p = run_git('push', '--dry-run', remote, newhash+':'+dest)
-exit(p.returncode)
+dest = 'refs/remotes/'+remote+'/branches/default/tip'
+#run_git('merge-base', '--is-ancestor', dest, newhash, check=True) 
+
+run_git('push', remote, new_hash+':'+dest)
 
