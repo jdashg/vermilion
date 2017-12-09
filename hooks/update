@@ -41,6 +41,10 @@ except subprocess.CalledProcessError:
     print('Did you forget to set cinnabar.path?')
     raise
 
+if not new_hash.replace('0', ''):
+    print('Git delete syntax interpreted as fetch-only.')
+    exit(1)
+
 dest = 'refs/remotes/'+remote+'/branches/default/tip'
 #run_git('merge-base', '--is-ancestor', dest, newhash, check=True) 
 
