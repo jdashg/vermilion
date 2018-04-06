@@ -1,4 +1,4 @@
-#!/bin/env bash
+#! /usr/bin/env bash
 # Run this from the target .git dir.
 src="`dirname $0`"
 dest="$PWD"
