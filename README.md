@@ -32,6 +32,13 @@ cd
 git init --bare foo.git
 cd foo.git
 git config fetch.prune
+
+# git gc is heavy-weight, and should probably not be done automatically by the server.
+git config gc.auto 0
+
+# git-shell doesn't pick up PATH, so our scripts manually add it based on cinnabar.path.
+git config cinnabar.path '/path/to/git-cinnabar-repo'
+
 git remote add bar hg::ssh://user@www.bar.org/bar
 
 git fetch bar
