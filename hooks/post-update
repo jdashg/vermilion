@@ -1,4 +1,4 @@
-#!/bin/env python3
+#! /usr/bin/env python3
 
 import os
 import subprocess
@@ -19,4 +19,3 @@ refname = sys.argv[1]
 assert _refs == 'refs'
 assert _heads == 'heads'
 run_git('branch', '-D', remote)
-

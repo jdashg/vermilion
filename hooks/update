@@ -1,4 +1,4 @@
-#!/bin/env python3
+#! /usr/bin/env python3
 import os
 import subprocess
 import sys
@@ -46,7 +46,6 @@ if not new_hash.replace('0', ''):
     exit(1)
 
 dest = 'refs/remotes/'+remote+'/branches/default/tip'
-#run_git('merge-base', '--is-ancestor', dest, newhash, check=True) 
+#run_git('merge-base', '--is-ancestor', dest, newhash, check=True)
 
 run_git('push', remote, new_hash+':'+dest)
-

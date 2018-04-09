@@ -3,4 +3,3 @@
 src="`dirname $0`"
 dest="$PWD"
 cp "$src"/hooks/* "$dest"/hooks/.
-
